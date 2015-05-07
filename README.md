@@ -1,12 +1,17 @@
-ably-python
------------
+# [Ably](https://www.ably.io)
 
-Ably.io python client library - REST interface
+[![Build Status](https://travis-ci.org/ably/ably-python.png)](https://travis-ci.org/ably/ably-python)
+
+A Python REST client library for [ably.io](https://www.ably.io), the realtime messaging service.
 
 ## Dependencies
 
-The ably-python client has one dependency, 
-[requests>=1.0.0](https://github.com/kennethreitz/requests)
+Dependencies can be installed using `pip`:
+
+```bash
+$ pip install .
+$ pip install -r requirements.txt
+```
 
 ## Features
 
