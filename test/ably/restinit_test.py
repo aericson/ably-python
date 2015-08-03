@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import unittest
+import logging
 
 from ably import AblyRest
 from ably import AblyException
@@ -43,6 +44,15 @@ class TestRestInit(unittest.TestCase):
         self.assertEqual(Defaults.port, Defaults.get_port(ably.options),
                 msg="Unexpected port mismatch")
 
+    def test_ably_has_same_logging_level_as_root(self):
+        root_level = logging.root.level
+        self.assertEqual(logging.getLogger('ably.rest.rest').getEffectiveLevel(), root_level)
+
+    def test_can_change_log_level(self):
+        root_level = logging.root.level
+        AblyRest(options=Options(log_level=root_level + 1))
+        self.assertEqual(logging.getLogger('ably.rest.rest').getEffectiveLevel(),
+                         root_level + 1)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,20 +1,12 @@
 import logging
 
-try:
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-        def handle(self, record):
-            pass
-
-        def createLock(self):
-            return None
+import sys
 
 logger = logging.getLogger(__name__)
-logger.addHandler(NullHandler())
+if (not sys.argv[0].endswith('nosetests') and
+        not (sys.argv[0].endswith('setup.py') and 'test' in sys.argv)):
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.WARNING)
 
 requests_log = logging.getLogger('requests')
 requests_log.setLevel(logging.WARNING)

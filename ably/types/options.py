@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import logging
+
 from ably.types.authoptions import AuthOptions
 from ably.util.exceptions import AblyException
 
@@ -13,7 +15,6 @@ class Options(AuthOptions):
         # TODO check these defaults
 
         self.__client_id = client_id
-        self.__log_level = log_level
         self.__tls = tls
         self.__host = host
         self.__ws_host = ws_host
@@ -22,6 +23,8 @@ class Options(AuthOptions):
         self.__use_text_protocol = use_text_protocol
         self.__queue_messages = queue_messages
         self.__recover = recover
+        # use the setter instead of assigning to __log_level
+        self.log_level = log_level
 
     @classmethod
     def with_key(cls, key, **kwargs):
@@ -53,6 +56,7 @@ class Options(AuthOptions):
 
     @log_level.setter
     def log_level(self, value):
+        logging.getLogger('ably').setLevel(value)
         self.__log_level = value
 
     @property
