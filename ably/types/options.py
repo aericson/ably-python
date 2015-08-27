@@ -5,8 +5,9 @@ from ably.util.exceptions import AblyException
 
 
 class Options(AuthOptions):
-    def __init__(self, client_id=None, log_level=0, tls=True, host=None,
-                 ws_host=None, port=0, tls_port=0, use_text_protocol=True,
+    def __init__(self, client_id=None, log_level=0, log_handler=None,
+                 tls=True, host=None, ws_host=None, port=0, tls_port=0,
+                 use_text_protocol=True, use_binary_protocol=True,
                  queue_messages=False, recover=False, **kwargs):
         super(Options, self).__init__(**kwargs)
 
@@ -14,12 +15,14 @@ class Options(AuthOptions):
 
         self.__client_id = client_id
         self.__log_level = log_level
+        self.__log_handler = log_handler
         self.__tls = tls
         self.__host = host
         self.__ws_host = ws_host
         self.__port = port
         self.__tls_port = tls_port
         self.__use_text_protocol = use_text_protocol
+        self.__use_binary_protocol = use_binary_protocol
         self.__queue_messages = queue_messages
         self.__recover = recover
 
@@ -38,6 +41,14 @@ class Options(AuthOptions):
     @log_level.setter
     def log_level(self, value):
         self.__log_level = value
+
+    @property
+    def log_handler(self):
+        return self.__log_handler
+
+    @log_handler.setter
+    def log_handler(self, value):
+        self.__log_handler = value
 
     @property
     def tls(self):
@@ -78,6 +89,14 @@ class Options(AuthOptions):
     @use_text_protocol.setter
     def use_text_protocol(self, value):
         self.__use_text_protocol = value
+
+    @property
+    def use_binary_protocol(self):
+        return self.__use_binary_protocol
+
+    @use_binary_protocol.setter
+    def use_binary_protocol(self, value):
+        self.__use_binary_protocol = value
 
     @property
     def queue_messages(self):
