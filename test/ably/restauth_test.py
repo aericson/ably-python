@@ -7,6 +7,7 @@ from ably import AblyRest
 from ably import Auth
 from ably import Options
 
+from ably.types.tokendetails import TokenDetails
 
 from test.ably.restsetup import RestSetup
 
@@ -70,3 +71,33 @@ class TestAuth(unittest.TestCase):
 
         self.assertEqual(Auth.Method.TOKEN, ably.auth.auth_method,
                 msg="Unexpected Auth method mismatch")
+
+    def test_use_token_auth_can_be_enabled(self):
+        ably = AblyRest(key=test_vars["keys"][0]["key_str"], use_token_auth=True)
+
+        self.assertTrue(ably.auth.auth_options.use_token_auth)
+
+    def test_query_time_can_be_enabled(self):
+        ably = AblyRest(key=test_vars["keys"][0]["key_str"], query_time=True)
+
+        self.assertTrue(ably.auth.auth_options.query_time)
+
+    def test_auth_token_details(self):
+        ably = AblyRest(token='this_is_not_really_a_token')
+
+        self.assertIsInstance(ably.auth.token_details, TokenDetails,
+                              msg="Token details is None.")
+
+    def test_auth_init_with_auth_headers(self):
+        ably = AblyRest(key=test_vars["keys"][0]["key_str"], 
+                        auth_headers='this_is_not_really_a_header')
+
+        self.assertEqual(ably.auth.auth_options.auth_headers,
+                         'this_is_not_really_a_header')
+
+    def test_auth_init_with_auth_params(self):
+        ably = AblyRest(key=test_vars["keys"][0]["key_str"],
+                        auth_params="this_is_not_really_a_auth_params")
+
+        self.assertEqual(ably.auth.auth_options.auth_params,
+                         'this_is_not_really_a_auth_params')

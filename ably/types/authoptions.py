@@ -7,13 +7,15 @@ from ably.util.exceptions import AblyException
 
 class AuthOptions(object):
     def __init__(self, auth_callback=None, auth_url=None, auth_token=None,
-                 auth_headers=None, auth_params=None, key_name=None, key_secret=None,
-                 key=None, query_time=False):
+                 auth_headers=None, auth_params=None, key_name=None,
+                 key_secret=None, key=None, use_token_auth=False,
+                 query_time=False):
         self.__auth_callback = auth_callback
         self.__auth_url = auth_url
         self.__auth_token = auth_token
         self.__auth_headers = auth_headers
         self.__auth_params = auth_params
+        self.__use_token_auth = use_token_auth
         if key is not None:
             self.__key_name, self.__key_secret = self.parse_key(key)
         else:
@@ -109,6 +111,14 @@ class AuthOptions(object):
     @auth_params.setter
     def auth_params(self, value):
         self.__auth_params = value
+
+    @property
+    def use_token_auth(self):
+        return self.__use_token_auth
+
+    @use_token_auth.setter
+    def use_token_auth(self, value):
+        self.__use_token_auth = value
 
     @property
     def query_time(self):
