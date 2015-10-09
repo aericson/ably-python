@@ -12,6 +12,7 @@ import six
 
 from ably.types.capability import Capability
 from ably.types.tokendetails import TokenDetails
+from ably.types.tokenrequest import TokenRequest
 
 # initialise and seed our own instance of random
 rnd = random.Random()
@@ -142,7 +143,7 @@ class Auth(object):
                 key_name=key_name,
                 key_secret=key_secret,
                 query_time=query_time,
-                token_params=token_params)
+                token_params=token_params).hash
         else:
             log.debug('No auth_callback, auth_url or key_secret specified')
             raise AblyException(
@@ -239,8 +240,7 @@ class Auth(object):
 
         req["mac"] = token_params.get("mac")
 
-        signed_request = req
-        log.debug("generated signed request: %s", signed_request)
+        signed_request = TokenRequest(req)
 
         return signed_request
 
