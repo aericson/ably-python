@@ -78,8 +78,14 @@ class Auth(object):
             raise ValueError("Can't authenticate via token, must provide "
                              "auth_callback, auth_url, key, token or a TokenDetail")
 
-    def authorise(self, force=False, **kwargs):
+    def authorise(self, token_params=None, auth_options=None):
+        if token_params is None:
+            token_params = {}
+        if auth_options is None:
+            auth_options = {}
         self.__auth_method = Auth.Method.TOKEN
+
+        force = auth_options.pop('force', False)
 
         if self.__token_details:
             if (self.__token_details.expires is None or
@@ -95,25 +101,25 @@ class Auth(object):
                 # token has expired
                 self.__token_details = None
 
-        self.__token_details = self.request_token(**kwargs)
+        self.__token_details = self.request_token(token_params, auth_options)
         return self.__token_details
 
-    def request_token(self, key_name=None, key_secret=None, query_time=None,
-                      auth_token=None, auth_callback=None, auth_url=None,
-                      auth_headers=None, auth_params=None, token_params=None):
-        key_name = key_name or self.auth_options.key_name
-        key_secret = key_secret or self.auth_options.key_secret
+    def request_token(self, token_params=None, auth_options=None):
+        if token_params is None:
+            token_params = {}
+        if auth_options is None:
+            auth_options = {}
 
+        key_name = auth_options.get('key_name') or self.auth_options.key_name
+        key_secret = auth_options.get('key_secret') or self.auth_options.key_secret
+
+        auth_callback = auth_options.get('auth_callback') or self.auth_options.auth_callback
         log.debug("Auth callback: %s" % auth_callback)
         log.debug("Auth options: %s" % six.text_type(self.auth_options))
-        if query_time is None:
-            query_time = self.auth_options.query_time
+        query_time = auth_options.get('query_time') or self.auth_options.query_time
         query_time = bool(query_time)
-        auth_token = auth_token or self.auth_options.auth_token
-        auth_callback = auth_callback or self.auth_options.auth_callback
-        auth_url = auth_url or self.auth_options.auth_url
-
-        auth_params = auth_params or self.auth_params
+        auth_url = auth_options.get('auth_url') or self.auth_options.auth_url
+        auth_headers = auth_options.get('auth_headers')
 
         token_params = token_params or {}
 
@@ -140,9 +146,7 @@ class Auth(object):
         elif key_secret:
             log.debug("using token auth with client-side signing")
             signed_token_request = self.create_token_request(
-                key_name=key_name,
-                key_secret=key_secret,
-                query_time=query_time,
+                auth_options=auth_options,
                 token_params=token_params).hash
         else:
             log.debug('No auth_callback, auth_url or key_secret specified')
@@ -165,9 +169,14 @@ class Auth(object):
         log.debug("Token: %s" % str(response_dict.get("token")))
         return TokenDetails.from_dict(response_dict)
 
-    def create_token_request(self, key_name=None, key_secret=None,
-                             query_time=None, token_params=None):
-        token_params = token_params or {}
+    def create_token_request(self, token_params=None, auth_options=None):
+        if token_params is None:
+            token_params = {}
+        if auth_options is None:
+            auth_options = {}
+
+        key_name = auth_options.get('key_name') or self.auth_options.key_name
+        key_secret = auth_options.get('key_secret') or self.auth_options.key_secret
 
         if token_params.setdefault("id", key_name) != key_name:
             raise AblyException("Incompatible key specified", 401, 40102)
@@ -176,8 +185,7 @@ class Auth(object):
             log.debug('key_name or key_secret blank')
             raise AblyException("No key specified", 401, 40101)
 
-        if query_time is None:
-            query_time = self.auth_options.query_time
+        query_time = auth_options.get('query_time') or self.auth_options.query_time
 
         if not token_params.get("timestamp"):
             if query_time:
