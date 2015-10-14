@@ -33,8 +33,9 @@ class TestRestCapability(BaseTestCase):
 
     def test_blanket_intersection_with_key(self):
         key = test_vars['keys'][1]
-        token_details = self.ably.auth.request_token(key_name=key['key_name'],
-                                                     key_secret=key['key_secret'])
+        auth_options = {'key_name': key['key_name'],
+                        'key_secret': key['key_secret']}
+        token_details = self.ably.auth.request_token(auth_options=auth_options)
         expected_capability = Capability(key["capability"])
         self.assertIsNotNone(token_details.token, msg="Expected token")
         self.assertEqual(expected_capability, token_details.capability,
@@ -46,10 +47,9 @@ class TestRestCapability(BaseTestCase):
         token_params = {
             "capability": key["capability"],
         }
-
-        token_details = self.ably.auth.request_token(key_name=key['key_name'],
-                key_secret=key['key_secret'],
-                token_params=token_params)
+        auth_options = {'key_name': key['key_name'],
+                        'key_secret': key['key_secret']}
+        token_details = self.ably.auth.request_token(token_params, auth_options)
 
         expected_capability = Capability(key["capability"])
 
@@ -66,11 +66,11 @@ class TestRestCapability(BaseTestCase):
                 "testchannel": ["subscribe"],
             },
         }
-
+        auth_options = {'key_name': key['key_name'],
+                        'key_secret': key['key_secret']}
         self.assertRaises(AblyException, self.ably.auth.request_token,
-                key_name=key['key_name'],
-                key_secret=key['key_secret'],
-                token_params=token_params)
+                          auth_options=auth_options,
+                          token_params=token_params)
 
     @dont_vary_protocol
     def test_empty_paths_intersection(self):
@@ -81,18 +81,18 @@ class TestRestCapability(BaseTestCase):
                 "testchannelx": ["publish"],
             },
         }
-
+        auth_options = {'key_name': key['key_name'],
+                        'key_secret': key['key_secret']}
         self.assertRaises(AblyException, self.ably.auth.request_token,
-                key_name=key['key_name'],
-                key_secret=key['key_secret'],
-                token_params=token_params)
+                          auth_options=auth_options,
+                          token_params=token_params)
 
     def test_non_empty_ops_intersection(self):
         key = test_vars['keys'][4]
 
         kwargs = {
-            "key_name": key["key_name"],
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "channel2": ["presence", "subscribe"],
@@ -114,9 +114,8 @@ class TestRestCapability(BaseTestCase):
         key = test_vars['keys'][4]
 
         kwargs = {
-            "key_name": key["key_name"],
-
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "channel2": ["presence", "subscribe"],
@@ -139,8 +138,8 @@ class TestRestCapability(BaseTestCase):
         key = test_vars['keys'][4]
 
         kwargs = {
-            "key_name": key["key_name"],
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "channel2": ["*"],
@@ -162,8 +161,8 @@ class TestRestCapability(BaseTestCase):
         key = test_vars['keys'][4]
 
         kwargs = {
-            "key_name": key["key_name"],
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "channel6": ["publish", "subscribe"],
@@ -185,8 +184,8 @@ class TestRestCapability(BaseTestCase):
         key = test_vars['keys'][2]
 
         kwargs = {
-            "key_name": key["key_name"],
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "cansubscribe": ["subscribe"],
@@ -208,8 +207,8 @@ class TestRestCapability(BaseTestCase):
         key = test_vars['keys'][2]
 
         kwargs = {
-            "key_name": key["key_name"],
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "cansubscribe:check": ["subscribe"],
@@ -231,8 +230,8 @@ class TestRestCapability(BaseTestCase):
         key = test_vars['keys'][2]
 
         kwargs = {
-            "key_name": key["key_name"],
-            "key_secret": key["key_secret"],
+            "auth_options": {"key_name": key["key_name"],
+                             "key_secret": key["key_secret"]},
             "token_params": {
                 "capability": {
                     "cansubscribe:*": ["subscribe"],

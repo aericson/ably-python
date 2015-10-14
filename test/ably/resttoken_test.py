@@ -78,7 +78,8 @@ class TestRestToken(BaseTestCase):
 
     def test_request_token_with_system_timestamp(self):
         pre_time = self.server_time()
-        token_details = self.ably.auth.request_token(query_time=True)
+        auth_options = {'query_time': True}
+        token_details = self.ably.auth.request_token(auth_options=auth_options)
         post_time = self.server_time()
         self.assertIsNotNone(token_details.token, msg="Expected token")
         self.assertGreaterEqual(token_details.issued,
@@ -123,8 +124,9 @@ class TestRestToken(BaseTestCase):
 
     def test_request_token_with_specified_key(self):
         key = RestSetup.get_test_vars()["keys"][1]
-        token_details = self.ably.auth.request_token(key_name=key["key_name"],
-                key_secret=key["key_secret"])
+        auth_options = {'key_name': key['key_name'],
+                        'key_secret': key['key_secret']}
+        token_details = self.ably.auth.request_token(auth_options=auth_options)
         self.assertIsNotNone(token_details.token, msg="Expected token")
         self.assertEqual(key.get("capability"),
                 token_details.capability,
@@ -166,6 +168,7 @@ class TestRestToken(BaseTestCase):
         timestamp = self.ably.auth._timestamp
         with patch('ably.rest.rest.AblyRest.time', wraps=self.ably.time) as server_time,\
                 patch('ably.rest.auth.Auth._timestamp', wraps=timestamp) as local_time:
-            self.ably.auth.request_token(query_time=True)
+            auth_options = {'query_time': True}
+            self.ably.auth.request_token(auth_options=auth_options)
             self.assertFalse(local_time.called)
             self.assertTrue(server_time.called)

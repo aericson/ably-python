@@ -176,7 +176,7 @@ class TestAuthAuthorize(BaseTestCase):
 
         token = self.ably.auth.authorise()
 
-        new_token = self.ably.auth.authorise(force=True)
+        new_token = self.ably.auth.authorise(auth_options={'force': True})
 
         self.assertGreater(token.expires, time.time()*1000)
 
@@ -203,14 +203,14 @@ class TestAuthAuthorize(BaseTestCase):
     def test_authorize_adhere_to_request_token(self):
 
         token_params = {'ttl': 100}
-        auth_params = {'auth_url': 'http://somewhere.com'}
+        auth_options = {'auth_url': 'http://somewhere.com'}
 
         with mock.patch('ably.rest.auth.Auth.request_token') as request_mock:
-            self.ably.auth.authorise(auth_params=auth_params,
-                                     token_params=token_params)
+            self.ably.auth.authorise(token_params=token_params,
+                                     auth_options=auth_options)
 
-        request_mock.assert_called_once_with(auth_params=auth_params,
-                                             token_params=token_params)
+        request_mock.assert_called_once_with(token_params,
+                                             auth_options)
 
     def test_with_token_str_https(self):
         token = self.ably.auth.authorise()
