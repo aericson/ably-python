@@ -121,8 +121,6 @@ class Auth(object):
         auth_url = auth_options.get('auth_url') or self.auth_options.auth_url
         auth_headers = auth_options.get('auth_headers')
 
-        token_params = token_params or {}
-
         token_params.setdefault("client_id", self.ably.client_id)
 
         signed_token_request = ""
