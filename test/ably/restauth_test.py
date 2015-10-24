@@ -17,7 +17,7 @@ from ably import AblyException
 from ably.types.tokendetails import TokenDetails
 
 from test.ably.restsetup import RestSetup
-from test.ably.utils import BaseTestCase, VaryByProtocolTestsMetaclass, dont_vary_protocol 
+from test.ably.utils import BaseTestCase, VaryByProtocolTestsMetaclass, dont_vary_protocol
 
 test_vars = RestSetup.get_test_vars()
 
@@ -32,6 +32,10 @@ class TestAuth(BaseTestCase):
         ably = AblyRest(key=test_vars["keys"][0]["key_str"])
         self.assertEqual(Auth.Method.BASIC, ably.auth.auth_mechanism,
                          msg="Unexpected Auth method mismatch")
+        self.assertEqual(ably.auth.auth_options.key_name,
+                         test_vars["keys"][0]['key_name'])
+        self.assertEqual(ably.auth.auth_options.key_secret,
+                         test_vars["keys"][0]['key_secret'])
 
     def test_auth_init_token_only(self):
         ably = AblyRest(token="this_is_not_really_a_token")
@@ -58,7 +62,7 @@ class TestAuth(BaseTestCase):
                         port=test_vars["port"],
                         tls_port=test_vars["tls_port"],
                         tls=test_vars["tls"],
-                        auth_callback= token_callback)
+                        auth_callback=token_callback)
 
         try:
             ably.stats(None)
@@ -85,6 +89,27 @@ class TestAuth(BaseTestCase):
 
         self.assertEqual(Auth.Method.TOKEN, ably.auth.auth_mechanism,
                 msg="Unexpected Auth method mismatch")
+
+    @responses.activate
+    def test_auth_with_url_method_headers_and_params(self):
+        url = 'http://www.example.com'
+        headers = {'foo': 'bar'}
+        self.ably = AblyRest(auth_url=url,
+                             auth_method='POST',
+                             auth_headers=headers,
+                             auth_params={'spam': 'eggs'},
+                             rest_host=test_vars["host"],
+                             port=test_vars["port"],
+                             tls_port=test_vars["tls_port"],
+                             tls=test_vars["tls"])
+
+        responses.add(responses.POST, url, body='token_string')
+        token_details = self.ably.auth.request_token()
+        self.assertIsInstance(token_details, TokenDetails)
+        self.assertEquals(len(responses.calls), 1)
+        self.assertEquals(headers['foo'],
+                          responses.calls[0].request.headers['foo'])
+        self.assertTrue(responses.calls[0].request.url.endswith('?spam=eggs'))
 
     def test_request_basic_auth_header(self):
         ably = AblyRest(key_secret='foo', key_name='bar')
@@ -247,6 +272,7 @@ class TestRequestToken(BaseTestCase):
                              use_binary_protocol=self.use_binary_protocol)
 
         token_details = self.ably.auth.request_token()
+        self.assertIsInstance(token_details, TokenDetails)
 
         ably = AblyRest(token_details=token_details,
                         rest_host=test_vars["host"],
@@ -277,6 +303,7 @@ class TestRequestToken(BaseTestCase):
                                                      auth_method='POST',
                                                      auth_params={'spam':
                                                                   'eggs'})
+        self.assertIsInstance(token_details, TokenDetails)
         self.assertEquals(len(responses.calls), 1)
         self.assertEquals(headers['foo'],
                           responses.calls[0].request.headers['foo'])
@@ -301,6 +328,7 @@ class TestRequestToken(BaseTestCase):
                              tls=test_vars["tls"])
 
         token_details = self.ably.auth.request_token(auth_callback=callback)
+        self.assertIsInstance(token_details, TokenDetails)
         self.assertEquals('token_string', token_details.token)
 
         def callback(ttl, capability, client_id, timestamp):
@@ -308,6 +336,27 @@ class TestRequestToken(BaseTestCase):
 
         token_details = self.ably.auth.request_token(auth_callback=callback)
         self.assertEquals('another_token_string', token_details.token)
+
+    @dont_vary_protocol
+    @responses.activate
+    def test_when_auth_url_has_query_string(self):
+        url = 'http://www.example.com?with=query'
+        headers = {'foo': 'bar'}
+        self.ably = AblyRest(auth_url=url,
+                             rest_host=test_vars["host"],
+                             port=test_vars["port"],
+                             tls_port=test_vars["tls_port"],
+                             tls=test_vars["tls"])
+
+        responses.add(responses.POST, 'http://www.example.com',
+                      body='token_string')
+        self.ably.auth.request_token(auth_url=url,
+                                     auth_headers=headers,
+                                     auth_method='POST',
+                                     auth_params={'spam':
+                                                  'eggs'})
+        self.assertTrue(responses.calls[0].request.url.endswith(
+                            '?with=query&spam=eggs'))
 
 
 class TestRenewToken(BaseTestCase):
@@ -380,7 +429,24 @@ class TestRenewToken(BaseTestCase):
                              tls_port=test_vars["tls_port"],
                              tls=test_vars["tls"],
                              use_binary_protocol=False)
-        self.ably.auth.authorise()
+        self.ably.channels[self.channel].publish('evt', 'msg')
+        self.assertEquals(1, self.publish_attempts)
+
+        publish = self.ably.channels[self.channel].publish
+
+        self.assertRaisesRegexp(AblyException, "No key specified", publish,
+                                'evt', 'msg')
+        self.assertEquals(0, self.token_requests)
+
+    def test_when_not_renewable_with_token_details(self):
+        token_details = TokenDetails(token='a_dummy_token')
+        self.ably = AblyRest(
+            token_details=token_details,
+            rest_host=test_vars["host"],
+            port=test_vars["port"],
+            tls_port=test_vars["tls_port"],
+            tls=test_vars["tls"],
+            use_binary_protocol=False)
         self.ably.channels[self.channel].publish('evt', 'msg')
         self.assertEquals(1, self.publish_attempts)
 
